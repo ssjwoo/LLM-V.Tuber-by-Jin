@@ -4,6 +4,7 @@ from .asr_interface import ASRInterface
 
 
 class VoiceRecognition(ASRInterface):
+
     BEAM_SEARCH = True
     # SAMPLE_RATE # Defined in asr_interface.py
 
@@ -13,35 +14,30 @@ class VoiceRecognition(ASRInterface):
         download_root: str = None,
         language: str = "en",
         device: str = "auto",
-        compute_type: str = "int8",
-        prompt: str = None,
     ) -> None:
         self.MODEL_PATH = model_path
         self.LANG = language
-        self.prompt = prompt
+
         self.model = WhisperModel(
-            model_size_or_path=model_path,
+            model_path,
             download_root=download_root,
             device=device,
-            compute_type=compute_type,
+            compute_type="float32",
         )
+        self.asr_with_vad = None
+
+    # Implemented in asr_interface.py
+    # def transcribe_with_local_vad(self) -> str:
 
     def transcribe_np(self, audio: np.ndarray) -> str:
-        if self.prompt:
-            segments, info = self.model.transcribe(
-                audio,
-                beam_size=5 if self.BEAM_SEARCH else 1,
-                language=self.LANG if self.LANG else None,
-                condition_on_previous_text=False,
-                initial_prompt=self.prompt,
-            )
-        else:
-            segments, info = self.model.transcribe(
-                audio,
-                beam_size=5 if self.BEAM_SEARCH else 1,
-                language=self.LANG if self.LANG else None,
-                condition_on_previous_text=False,
-            )
+
+        segments, info = self.model.transcribe(
+            audio,
+            beam_size=5 if self.BEAM_SEARCH else 1,
+            language=self.LANG,
+            condition_on_previous_text=False,
+        )
+
         text = [segment.text for segment in segments]
 
         if not text:

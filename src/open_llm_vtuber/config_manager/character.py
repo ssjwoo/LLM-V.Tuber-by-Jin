@@ -2,9 +2,9 @@
 from pydantic import Field, field_validator
 from typing import Dict, ClassVar
 from .i18n import I18nMixin, Description
-from .asr import ASRConfig
+
 from .tts import TTSConfig
-from .vad import VADConfig
+
 from .tts_preprocessor import TTSPreprocessorConfig
 
 from .agent import AgentConfig
@@ -21,9 +21,9 @@ class CharacterConfig(I18nMixin):
     avatar: str = Field(default="", alias="avatar")
     persona_prompt: str = Field(..., alias="persona_prompt")
     agent_config: AgentConfig = Field(..., alias="agent_config")
-    asr_config: ASRConfig = Field(..., alias="asr_config")
+
     tts_config: TTSConfig = Field(..., alias="tts_config")
-    vad_config: VADConfig = Field(..., alias="vad_config")
+
     tts_preprocessor_config: TTSPreprocessorConfig = Field(
         ..., alias="tts_preprocessor_config"
     )
@@ -48,15 +48,11 @@ class CharacterConfig(I18nMixin):
         "agent_config": Description(
             en="Configuration for the conversation agent", zh="对话代理配置"
         ),
-        "asr_config": Description(
-            en="Configuration for Automatic Speech Recognition", zh="语音识别配置"
-        ),
+
         "tts_config": Description(
             en="Configuration for Text-to-Speech", zh="语音合成配置"
         ),
-        "vad_config": Description(
-            en="Configuration for Voice Activity Detection", zh="语音活动检测配置"
-        ),
+
         "tts_preprocessor_config": Description(
             en="Configuration for Text-to-Speech Preprocessor",
             zh="语音合成预处理器配置",

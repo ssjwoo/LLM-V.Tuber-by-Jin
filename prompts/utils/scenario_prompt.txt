@@ -1,0 +1,5 @@
+[Scenario]
+Current location: {location}
+Time: {time}
+Atmosphere: {atmosphere}
+Please act according to this scenario.

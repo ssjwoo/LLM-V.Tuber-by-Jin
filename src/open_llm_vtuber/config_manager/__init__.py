@@ -15,16 +15,7 @@ from .stateless_llm import (
     ClaudeConfig,
     LlamaCppConfig,
 )
-from .asr import (
-    ASRConfig,
-    AzureASRConfig,
-    FasterWhisperConfig,
-    WhisperCPPConfig,
-    WhisperConfig,
-    FunASRConfig,
-    SherpaOnnxASRConfig,
-    GroqWhisperASRConfig,
-)
+
 from .tts import (
     TTSConfig,
     AzureTTSConfig,
@@ -38,10 +29,7 @@ from .tts import (
     FishAPITTSConfig,
     SherpaOnnxTTSConfig,
 )
-from .vad import (
-    VADConfig,
-    SileroVADConfig,
-)
+
 from .tts_preprocessor import TTSPreprocessorConfig, TranslatorConfig, DeepLXConfig
 from .i18n import I18nMixin, Description, MultiLingualString
 from .agent import (
@@ -85,14 +73,7 @@ __all__ = [
     "Mem0LLMConfig",
     "Mem0EmbedderConfig",
     # ASR related classes
-    "ASRConfig",
-    "AzureASRConfig",
-    "FasterWhisperConfig",
-    "WhisperCPPConfig",
-    "WhisperConfig",
-    "FunASRConfig",
-    "SherpaOnnxASRConfig",
-    "GroqWhisperASRConfig",
+
     # TTS related classes
     "TTSConfig",
     "AzureTTSConfig",
@@ -105,9 +86,7 @@ __all__ = [
     "GPTSoVITSConfig",
     "FishAPITTSConfig",
     "SherpaOnnxTTSConfig",
-    # VAD related classes
-    "VADConfig",
-    "SileroVADConfig",
+
     # TTS preprocessor related classes
     "TTSPreprocessorConfig",
     "TranslatorConfig",

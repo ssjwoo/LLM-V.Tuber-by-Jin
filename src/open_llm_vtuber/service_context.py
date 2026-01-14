@@ -1,14 +1,13 @@
 import os
 import json
-from typing import Callable
+from typing import Callable, Any
 from loguru import logger
 from fastapi import WebSocket
 
 from prompts import prompt_loader
 from .live2d_model import Live2dModel
-from .asr.asr_interface import ASRInterface
 from .tts.tts_interface import TTSInterface
-from .vad.vad_interface import VADInterface
+
 from .agent.agents.agent_interface import AgentInterface
 from .translate.translate_interface import TranslateInterface
 
@@ -18,9 +17,9 @@ from .mcpp.mcp_client import MCPClient
 from .mcpp.tool_executor import ToolExecutor
 from .mcpp.tool_adapter import ToolAdapter
 
-from .asr.asr_factory import ASRFactory
+
 from .tts.tts_factory import TTSFactory
-from .vad.vad_factory import VADFactory
+
 from .agent.agent_factory import AgentFactory
 from .translate.translate_factory import TranslateFactory
 
@@ -29,9 +28,8 @@ from .config_manager import (
     AgentConfig,
     CharacterConfig,
     SystemConfig,
-    ASRConfig,
     TTSConfig,
-    VADConfig,
+
     TranslatorConfig,
     read_yaml,
     validate_config,
@@ -48,11 +46,12 @@ class ServiceContext:
         self.character_config: CharacterConfig = None
 
         self.live2d_model: Live2dModel = None
-        self.asr_engine: ASRInterface = None
+        self.asr_engine: Any = None
         self.tts_engine: TTSInterface = None
+        self.vad_engine: Any = None
         self.agent_engine: AgentInterface = None
         # translate_engine can be none if translation is disabled
-        self.vad_engine: VADInterface | None = None
+
         self.translate_engine: TranslateInterface | None = None
 
         self.mcp_server_registery: ServerRegistry | None = None
@@ -78,14 +77,11 @@ class ServiceContext:
             f"  System Config: {'Loaded' if self.system_config else 'Not Loaded'}\n"
             f"    Details: {json.dumps(self.system_config.model_dump(), indent=6) if self.system_config else 'None'}\n"
             f"  Live2D Model: {self.live2d_model.model_info if self.live2d_model else 'Not Loaded'}\n"
-            f"  ASR Engine: {type(self.asr_engine).__name__ if self.asr_engine else 'Not Loaded'}\n"
-            f"    Config: {json.dumps(self.character_config.asr_config.model_dump(), indent=6) if self.character_config.asr_config else 'None'}\n"
             f"  TTS Engine: {type(self.tts_engine).__name__ if self.tts_engine else 'Not Loaded'}\n"
             f"    Config: {json.dumps(self.character_config.tts_config.model_dump(), indent=6) if self.character_config.tts_config else 'None'}\n"
             f"  LLM Engine: {type(self.agent_engine).__name__ if self.agent_engine else 'Not Loaded'}\n"
             f"    Agent Config: {json.dumps(self.character_config.agent_config.model_dump(), indent=6) if self.character_config.agent_config else 'None'}\n"
-            f"  VAD Engine: {type(self.vad_engine).__name__ if self.vad_engine else 'Not Loaded'}\n"
-            f"    Agent Config: {json.dumps(self.character_config.vad_config.model_dump(), indent=6) if self.character_config.vad_config else 'None'}\n"
+
             f"  System Prompt: {self.system_prompt or 'Not Set'}\n"
             f"  MCP Enabled: {'Yes' if self.mcp_client else 'No'}"
         )
@@ -204,9 +200,10 @@ class ServiceContext:
         system_config: SystemConfig,
         character_config: CharacterConfig,
         live2d_model: Live2dModel,
-        asr_engine: ASRInterface,
+        asr_engine: Any,
         tts_engine: TTSInterface,
-        vad_engine: VADInterface,
+        vad_engine: Any,
+
         agent_engine: AgentInterface,
         translate_engine: TranslateInterface | None,
         mcp_server_registery: ServerRegistry | None = None,
@@ -230,6 +227,7 @@ class ServiceContext:
         self.asr_engine = asr_engine
         self.tts_engine = tts_engine
         self.vad_engine = vad_engine
+
         self.agent_engine = agent_engine
         self.translate_engine = translate_engine
         # Load potentially shared components by reference
@@ -268,14 +266,12 @@ class ServiceContext:
         # init live2d from character config
         self.init_live2d(config.character_config.live2d_model_name)
 
-        # init asr from character config
-        self.init_asr(config.character_config.asr_config)
+
 
         # init tts from character config
         self.init_tts(config.character_config.tts_config)
 
-        # init vad from character config
-        self.init_vad(config.character_config.vad_config)
+
 
         # Initialize shared ToolAdapter if it doesn't exist yet
         if (
@@ -320,17 +316,7 @@ class ServiceContext:
             logger.critical(f"Error initializing Live2D: {e}")
             logger.critical("Try to proceed without Live2D...")
 
-    def init_asr(self, asr_config: ASRConfig) -> None:
-        if not self.asr_engine or (self.character_config.asr_config != asr_config):
-            logger.info(f"Initializing ASR: {asr_config.asr_model}")
-            self.asr_engine = ASRFactory.get_asr_system(
-                asr_config.asr_model,
-                **getattr(asr_config, asr_config.asr_model).model_dump(),
-            )
-            # saving config should be done after successful initialization
-            self.character_config.asr_config = asr_config
-        else:
-            logger.info("ASR already initialized with the same config.")
+
 
     def init_tts(self, tts_config: TTSConfig) -> None:
         if not self.tts_engine or (self.character_config.tts_config != tts_config):
@@ -344,22 +330,7 @@ class ServiceContext:
         else:
             logger.info("TTS already initialized with the same config.")
 
-    def init_vad(self, vad_config: VADConfig) -> None:
-        if vad_config.vad_model is None:
-            logger.info("VAD is disabled.")
-            self.vad_engine = None
-            return
 
-        if not self.vad_engine or (self.character_config.vad_config != vad_config):
-            logger.info(f"Initializing VAD: {vad_config.vad_model}")
-            self.vad_engine = VADFactory.get_vad_engine(
-                vad_config.vad_model,
-                **getattr(vad_config, vad_config.vad_model.lower()).model_dump(),
-            )
-            # saving config should be done after successful initialization
-            self.character_config.vad_config = vad_config
-        else:
-            logger.info("VAD already initialized with the same config.")
 
     async def init_agent(self, agent_config: AgentConfig, persona_prompt: str) -> None:
         """Initialize or update the LLM engine based on agent configuration."""
@@ -408,7 +379,11 @@ class ServiceContext:
         """Initialize or update the translation engine based on the configuration."""
 
         if not translator_config.translate_audio:
-            logger.debug("Translation is disabled.")
+            if self.translate_engine:
+                logger.info("Translation disabled; releasing existing translator.")
+                self.translate_engine = None
+            else:
+                logger.debug("Translation is disabled.")
             return
 
         if (

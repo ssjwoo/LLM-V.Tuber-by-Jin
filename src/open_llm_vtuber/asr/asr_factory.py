@@ -13,8 +13,6 @@ class ASRFactory:
                 download_root=kwargs.get("download_root"),
                 language=kwargs.get("language"),
                 device=kwargs.get("device"),
-                compute_type=kwargs.get("compute_type"),
-                prompt=kwargs.get("prompt", None),
             )
         elif system_name == "whisper_cpp":
             from .whisper_cpp_asr import VoiceRecognition as WhisperCPPASR
@@ -44,7 +42,6 @@ class ASRFactory:
             return AzureASR(
                 subscription_key=kwargs.get("api_key"),
                 region=kwargs.get("region"),
-                languages=kwargs.get("languages", ["en-US", "zh-CN"]),
             )
         elif system_name == "groq_whisper_asr":
             from .groq_whisper_asr import VoiceRecognition as GroqWhisperASR
@@ -56,7 +53,6 @@ class ASRFactory:
             )
         elif system_name == "sherpa_onnx_asr":
             from .sherpa_onnx_asr import VoiceRecognition as SherpaOnnxASR
-
             return SherpaOnnxASR(**kwargs)
         else:
             raise ValueError(f"Unknown ASR system: {system_name}")

@@ -25,7 +25,7 @@ async def handle_conversation_trigger(
     client_contexts: Dict[str, ServiceContext],
     client_connections: Dict[str, WebSocket],
     chat_group_manager: ChatGroupManager,
-    received_data_buffers: Dict[str, np.ndarray],
+    received_data_buffers: Dict[str, list[np.ndarray]],
     current_conversation_tasks: Dict[str, Optional[asyncio.Task]],
     broadcast_to_group: Callable,
 ) -> None:
@@ -65,8 +65,9 @@ async def handle_conversation_trigger(
     elif msg_type == "text-input":
         user_input = data.get("text", "")
     else:  # mic-audio-end
-        user_input = received_data_buffers[client_uid]
-        received_data_buffers[client_uid] = np.array([])
+        chunks = received_data_buffers.get(client_uid, [])
+        user_input = np.concatenate(chunks) if chunks else np.array([])
+        received_data_buffers[client_uid] = []
 
     images = data.get("images")
     session_emoji = np.random.choice(EMOJI_LIST)
@@ -86,6 +87,7 @@ async def handle_conversation_trigger(
                     client_contexts=client_contexts,
                     client_connections=client_connections,
                     broadcast_func=broadcast_to_group,
+                    group_id=group.group_id,
                     group_members=group.members,
                     initiator_client_uid=client_uid,
                     user_input=user_input,

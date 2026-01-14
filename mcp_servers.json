@@ -1,12 +1,20 @@
 {
     "mcp_servers": {
       "time": {
-        "command": "uvx",
+        "command": "/home/jinwoo/.local/bin/uvx",
         "args": ["mcp-server-time", "--local-timezone=Asia/Shanghai"]
       },
       "ddg-search": {
-        "command": "uvx",
+        "command": "/home/jinwoo/.local/bin/uvx",
         "args": ["duckduckgo-mcp-server"]
+      },
+      "fetch": {
+        "command": "/home/jinwoo/.local/bin/uvx",
+        "args": ["mcp-server-fetch"]
+      },
+      "filesystem": {
+        "command": "/home/jinwoo/.local/bin/uvx",
+        "args": ["mcp-server-filesystem", "/home/jinwoo/project/Open-LLM-VTuber/data"]
       }
     }
 }

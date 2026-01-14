@@ -142,6 +142,36 @@ class OpenAIConfig(OpenAICompatibleConfig):
     )
 
 
+class VertexAIConfig(StatelessLLMBaseConfig):
+    """Configuration for Google Cloud Vertex AI."""
+
+    project_id: str = Field(..., alias="project_id")
+    location: str = Field(..., alias="location")
+    model: str = Field(..., alias="model")
+    max_output_tokens: int | None = Field(None, alias="max_output_tokens")
+    temperature: float = Field(1.0, alias="temperature")
+    safety_settings: dict | None = Field(None, alias="safety_settings")
+
+    _VERTEX_AI_DESCRIPTIONS: ClassVar[dict[str, Description]] = {
+        "project_id": Description(
+            en="Google Cloud Project ID", zh="Google Cloud 项目 ID"
+        ),
+        "location": Description(
+            en="Google Cloud Region (e.g., us-central1)",
+            zh="Google Cloud 区域 (例如 us-central1)",
+        ),
+        "model": Description(
+            en="Name of the Gemini model to use (e.g., gemini-1.5-pro)",
+            zh="要使用的 Gemini 模型名称 (例如 gemini-1.5-pro)",
+        ),
+    }
+
+    DESCRIPTIONS: ClassVar[dict[str, Description]] = {
+        **StatelessLLMBaseConfig.DESCRIPTIONS,
+        **_VERTEX_AI_DESCRIPTIONS,
+    }
+
+
 class GeminiConfig(OpenAICompatibleConfig):
     """Configuration for Gemini API."""
 
@@ -242,6 +272,7 @@ class StatelessLLMConfigs(I18nMixin, BaseModel):
     ollama_llm: OllamaConfig | None = Field(None, alias="ollama_llm")
     lmstudio_llm: LmStudioConfig | None = Field(None, alias="lmstudio_llm")
     openai_llm: OpenAIConfig | None = Field(None, alias="openai_llm")
+    vertex_ai_llm: VertexAIConfig | None = Field(None, alias="vertex_ai_llm")
     gemini_llm: GeminiConfig | None = Field(None, alias="gemini_llm")
     zhipu_llm: ZhipuConfig | None = Field(None, alias="zhipu_llm")
     deepseek_llm: DeepseekConfig | None = Field(None, alias="deepseek_llm")
@@ -264,6 +295,10 @@ class StatelessLLMConfigs(I18nMixin, BaseModel):
         ),
         "openai_llm": Description(
             en="Configuration for Official OpenAI API", zh="官方 OpenAI API 配置"
+        ),
+        "vertex_ai_llm": Description(
+            en="Configuration for Google Cloud Vertex AI",
+            zh="Google Cloud Vertex AI 配置",
         ),
         "gemini_llm": Description(
             en="Configuration for Gemini API", zh="Gemini API 配置"

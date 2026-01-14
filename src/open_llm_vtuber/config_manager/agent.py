@@ -23,6 +23,7 @@ class BasicMemoryAgentConfig(I18nMixin, BaseModel):
         "lmstudio_llm",
         "openai_llm",
         "gemini_llm",
+        "vertex_ai_llm",
         "zhipu_llm",
         "deepseek_llm",
         "groq_llm",

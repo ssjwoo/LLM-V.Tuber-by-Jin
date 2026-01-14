@@ -138,65 +138,7 @@ def init_webtool_routes(default_context_cache: ServiceContext) -> APIRouter:
             }
         )
 
-    @router.post("/asr")
-    async def transcribe_audio(file: UploadFile = File(...)):
-        """
-        Endpoint for transcribing audio using the ASR engine
-        """
-        logger.info(f"Received audio file for transcription: {file.filename}")
 
-        try:
-            contents = await file.read()
-
-            # Validate minimum file size
-            if len(contents) < 44:  # Minimum WAV header size
-                raise ValueError("Invalid WAV file: File too small")
-
-            # Decode the WAV header and get actual audio data
-            wav_header_size = 44  # Standard WAV header size
-            audio_data = contents[wav_header_size:]
-
-            # Validate audio data size
-            if len(audio_data) % 2 != 0:
-                raise ValueError("Invalid audio data: Buffer size must be even")
-
-            # Convert to 16-bit PCM samples to float32
-            try:
-                audio_array = (
-                    np.frombuffer(audio_data, dtype=np.int16).astype(np.float32)
-                    / 32768.0
-                )
-            except ValueError as e:
-                raise ValueError(
-                    f"Audio format error: {str(e)}. Please ensure the file is 16-bit PCM WAV format."
-                )
-
-            # Validate audio data
-            if len(audio_array) == 0:
-                raise ValueError("Empty audio data")
-
-            text = await default_context_cache.asr_engine.async_transcribe_np(
-                audio_array
-            )
-            logger.info(f"Transcription result: {text}")
-            return {"text": text}
-
-        except ValueError as e:
-            logger.error(f"Audio format error: {e}")
-            return Response(
-                content=json.dumps({"error": str(e)}),
-                status_code=400,
-                media_type="application/json",
-            )
-        except Exception as e:
-            logger.error(f"Error during transcription: {e}")
-            return Response(
-                content=json.dumps(
-                    {"error": "Internal server error during transcription"}
-                ),
-                status_code=500,
-                media_type="application/json",
-            )
 
     @router.websocket("/tts-ws")
     async def tts_endpoint(websocket: WebSocket):

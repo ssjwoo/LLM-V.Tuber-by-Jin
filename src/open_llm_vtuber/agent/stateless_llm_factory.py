@@ -9,6 +9,7 @@ from .stateless_llm.stateless_llm_with_template import (
 from .stateless_llm.openai_compatible_llm import AsyncLLM as OpenAICompatibleLLM
 from .stateless_llm.ollama_llm import OllamaLLM
 from .stateless_llm.claude_llm import AsyncLLM as ClaudeLLM
+from .stateless_llm.vertex_ai_llm import VertexAILLM
 
 
 class LLMFactory:
@@ -73,6 +74,16 @@ class LLMFactory:
                 base_url=kwargs.get("base_url"),
                 model=kwargs.get("model"),
                 llm_api_key=kwargs.get("llm_api_key"),
+            )
+        elif llm_provider == "vertex_ai_llm":
+            return VertexAILLM(
+                project_id=kwargs.get("project_id"),
+                location=kwargs.get("location"),
+                model=kwargs.get("model"),
+                max_output_tokens=kwargs.get("max_output_tokens"),
+                temperature=kwargs.get("temperature"),
+                safety_settings=kwargs.get("safety_settings"),
+                system_prompt=kwargs.get("system_prompt"),
             )
         else:
             raise ValueError(f"Unsupported LLM provider: {llm_provider}")

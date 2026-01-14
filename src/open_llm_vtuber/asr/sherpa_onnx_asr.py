@@ -3,8 +3,8 @@ import numpy as np
 import sherpa_onnx
 from loguru import logger
 from .asr_interface import ASRInterface
-from .utils import download_and_extract, check_and_extract_local_file
-import onnxruntime
+from .utils import download_and_extract
+import onnxruntime as ort
 
 
 class VoiceRecognition(ASRInterface):
@@ -36,7 +36,6 @@ class VoiceRecognition(ASRInterface):
         sample_rate: int = 16000,  # Sample rate
         feature_dim: int = 80,  # Feature dimension
         use_itn: bool = True,  # Use ITN for SenseVoice models
-        provider: str = "cpu",  # Provider for inference (cpu or cuda)
     ) -> None:
         self.model_type = model_type
         self.encoder = encoder
@@ -65,20 +64,12 @@ class VoiceRecognition(ASRInterface):
         self.feature_dim = feature_dim
         self.use_itn = use_itn
 
+        self.asr_with_vad = None
+
         # we need to find a way to get cuda version of sherpa-onnx before we can
         # use the gpu provider.
-        self.provider = provider
-        if self.provider == "cuda":
-            try:
-                if "CUDAExecutionProvider" not in onnxruntime.get_available_providers():
-                    logger.warning(
-                        "CUDA provider not available for ONNX. Falling back to CPU."
-                    )
-                    self.provider = "cpu"
-            except ImportError:
-                logger.warning("ONNX Runtime not installed. Falling back to CPU.")
-                self.provider = "cpu"
-        logger.info(f"Sherpa-Onnx-ASR: Using {self.provider} for inference")
+        self.provider = "cpu"
+        logger.info(f"Sherpa-Onnx-ASR: Using {self.provider} provider for inference")
 
         self.recognizer = self._create_recognizer()
 
@@ -99,7 +90,6 @@ class VoiceRecognition(ASRInterface):
                 bpe_vocab=self.bpe_vocab,
                 blank_penalty=self.blank_penalty,
                 debug=self.debug,
-                provider=self.provider,
             )
         elif self.model_type == "paraformer":
             recognizer = sherpa_onnx.OfflineRecognizer.from_paraformer(
@@ -110,7 +100,6 @@ class VoiceRecognition(ASRInterface):
                 feature_dim=self.feature_dim,
                 decoding_method=self.decoding_method,
                 debug=self.debug,
-                provider=self.provider,
             )
         elif self.model_type == "nemo_ctc":
             recognizer = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(
@@ -121,7 +110,6 @@ class VoiceRecognition(ASRInterface):
                 feature_dim=self.feature_dim,
                 decoding_method=self.decoding_method,
                 debug=self.debug,
-                provider=self.provider,
             )
         elif self.model_type == "wenet_ctc":
             recognizer = sherpa_onnx.OfflineRecognizer.from_wenet_ctc(
@@ -132,7 +120,6 @@ class VoiceRecognition(ASRInterface):
                 feature_dim=self.feature_dim,
                 decoding_method=self.decoding_method,
                 debug=self.debug,
-                provider=self.provider,
             )
         elif self.model_type == "whisper":
             recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
@@ -145,7 +132,6 @@ class VoiceRecognition(ASRInterface):
                 language=self.whisper_language,
                 task=self.whisper_task,
                 tail_paddings=self.whisper_tail_paddings,
-                provider=self.provider,
             )
         elif self.model_type == "tdnn_ctc":
             recognizer = sherpa_onnx.OfflineRecognizer.from_tdnn_ctc(
@@ -156,7 +142,6 @@ class VoiceRecognition(ASRInterface):
                 num_threads=self.num_threads,
                 decoding_method=self.decoding_method,
                 debug=self.debug,
-                provider=self.provider,
             )
         elif self.model_type == "sense_voice":
             if not self.sense_voice or not os.path.isfile(self.sense_voice):
@@ -166,21 +151,10 @@ class VoiceRecognition(ASRInterface):
                     logger.warning(
                         "SenseVoice model not found. Downloading the model..."
                     )
-
-                    url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2"
-                    output_dir = "./models"
-                    # check the local file first before download
-                    local_result = check_and_extract_local_file(url, output_dir)
-
-                    if local_result is None:
-                        logger.info("Local file not found. Downloading...")
-                        download_and_extract(url, output_dir)
-                    else:
-                        logger.info("Local file found. Using existing file.")
-                    # download_and_extract(
-                    #     url="https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2",
-                    #     output_dir="./models",
-                    # )
+                    download_and_extract(
+                        url="https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2",
+                        output_dir="./models",
+                    )
                 else:
                     logger.critical(
                         "The SenseVoice model is missing. Please provide the path to the model.onnx file."
@@ -191,7 +165,6 @@ class VoiceRecognition(ASRInterface):
                 num_threads=self.num_threads,
                 use_itn=self.use_itn,
                 debug=self.debug,
-                provider=self.provider,
             )
         else:
             raise ValueError(f"Invalid model type: {self.model_type}")

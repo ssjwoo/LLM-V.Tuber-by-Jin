@@ -23,12 +23,7 @@ system_config:
     # Prompt to enhance the LLM's ability to output speakable text
     # speakable_prompt: 'speakable_prompt'
     # Additional guidance for LLM on how to use tools
-    # tool_guidance_prompt: 'tool_guidance_prompt'
-
-    # === Modular Prompt Examples (Custom) ===
-    # Uncomment to enable these prompts. Files must exist in prompts/utils/
-    # cot_prompt: 'cot_prompt'
-    # scenario_prompt: 'scenario_prompt' 
+    # tool_guidance_prompt: 'tool_guidance_prompt' 
 
 # configuration for the default character
 character_config:
@@ -63,7 +58,7 @@ character_config:
         # 'openai_compatible_llm', 'llama_cpp_llm', 'claude_llm', 'ollama_llm'
         # 'openai_llm', 'gemini_llm', 'zhipu_llm', 'deepseek_llm', 'groq_llm'
         # 'mistral_llm', 'lmstudio_llm', and more
-        llm_provider: 'ollama_llm'
+        llm_provider: 'vertex_ai_llm'
         # let ai speak as soon as the first comma is received on the first sentence
         # to reduced latency.
         faster_first_response: True
@@ -72,7 +67,7 @@ character_config:
         # Use MCP (Model Context Protocol) Plus to let the LLM have the ability to use tools
         # 'Plus' means that it has the ability to call tools by using OpenAI API.
         use_mcpp: True
-        mcp_enabled_servers: ["time", "ddg-search"] # Enabled MCP servers
+        mcp_enabled_servers: ["time", "ddg-search", "fetch", "filesystem"] # Enabled MCP servers
 
       letta_agent:
         host: 'localhost' # Host address
@@ -151,12 +146,12 @@ character_config:
         temperature: 1.0 # value between 0 to 2
 
       # Google Cloud Vertex AI (Gemini)
-      # vertex_ai_llm:
-      #   project_id: 'your-google-cloud-project-id'
-      #   location: 'us-central1'
-      #   model: 'gemini-1.5-pro'
-      #   temperature: 1.0
-      #   max_output_tokens: 2048
+      vertex_ai_llm:
+        project_id: 'gen-lang-client-0121173096'
+        location: 'us-central1'
+        model: 'gemini-1.5-pro'
+        temperature: 1.0
+        max_output_tokens: 2048
 
       gemini_llm:
         llm_api_key: 'Your Gemini API Key'
@@ -183,26 +178,7 @@ character_config:
         model: 'llama-3.3-70b-versatile'
         temperature: 1.0 # value between 0 to 2
 
-
-      # whisper_language: '' # Language for Whisper models (e.g., 'en', 'zh', etc. - if using Whisper)
-      # whisper_task: 'transcribe'  # Task for Whisper models ('transcribe' or 'translate' - if using Whisper)
-      # whisper_tail_paddings: -1   # Tail padding for Whisper models (if using Whisper)
-      # blank_penalty: 0.0    # Penalty for blank symbol
-      # decoding_method: 'greedy_search'  # 'greedy_search' or 'modified_beam_search'
-      # debug: False # Enable debug mode
-      # sample_rate: 16000 # Sample rate (should match the model's expected sample rate)
-      # feature_dim: 80       # Feature dimension (should match the model's expected feature dimension)
-      use_itn: True # Enable ITN for SenseVoice models (should set to False if not using SenseVoice models)
-      # Provider for inference (cpu or cuda) (cuda option needs additional settings. Please check our docs)
-      provider: 'cpu' 
-
-    groq_whisper_asr:
-      api_key: ''
-      model: 'whisper-large-v3-turbo' # or 'whisper-large-v3'
-      lang: '' # put nothing and it will be auto
-
-  # =================== Text to Speech ===================
-  tts_config:
+  # === Automatic Speech Recognition ===
     tts_model: 'edge_tts'
     # text to speech model options:
     #   'azure_tts', 'pyttsx3_tts', 'edge_tts', 'bark_tts',
@@ -223,7 +199,7 @@ character_config:
     edge_tts:
       # Check out doc at https://github.com/rany2/edge-tts
       # Use `edge-tts --list-voices` to list all available voices
-      voice: 'en-US-AnaNeural' # 'en-US-AvaMultilingualNeural' #'zh-CN-XiaoxiaoNeural' # 'ja-JP-NanamiNeural'
+      voice: 'en-US-AvaMultilingualNeural' # 'en-US-AvaMultilingualNeural' #'zh-CN-XiaoxiaoNeural' # 'ja-JP-NanamiNeural'
 
     # pyttsx3_tts doesn't have any config.
 

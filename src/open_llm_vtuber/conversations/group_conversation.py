@@ -30,11 +30,12 @@ async def process_group_conversation(
     client_contexts: Dict[str, ServiceContext],
     client_connections: Dict[str, WebSocket],
     broadcast_func: BroadcastFunc,
+    group_id: str,
     group_members: List[str],
     initiator_client_uid: str,
     user_input: Union[str, np.ndarray],
     images: Optional[List[Dict[str, Any]]] = None,
-    session_emoji: str = np.random.choice(EMOJI_LIST),
+    session_emoji: Optional[str] = None,
     metadata: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Process group conversation
@@ -43,6 +44,7 @@ async def process_group_conversation(
         client_contexts: Dictionary of client contexts
         client_connections: Dictionary of client WebSocket connections
         broadcast_func: Function to broadcast messages to group
+        group_id: Group identifier
         group_members: List of group member UIDs
         initiator_client_uid: UID of conversation initiator
         user_input: Text or audio input from user
@@ -54,11 +56,13 @@ async def process_group_conversation(
     tts_managers = {uid: TTSTaskManager() for uid in group_members}
 
     try:
+        if not session_emoji:
+            session_emoji = np.random.choice(EMOJI_LIST)
         logger.info(f"Group Conversation Chain {session_emoji} started!")
 
         # Initialize state with group_id
         state = GroupConversationState(
-            group_id=f"group_{initiator_client_uid}",  # Use same format as chat_group
+            group_id=group_id,
             session_emoji=session_emoji,
             group_queue=list(group_members),
             memory_index={
@@ -67,7 +71,7 @@ async def process_group_conversation(
         )
 
         # Initialize group conversation context for each AI
-        init_group_conversation_contexts(client_contexts)
+        init_group_conversation_contexts(client_contexts, group_members)
 
         # Get human name from initiator context
         initiator_context = client_contexts.get(initiator_client_uid)
@@ -105,7 +109,7 @@ async def process_group_conversation(
 
         state.conversation_history = [f"{human_name}: {input_text}"]
 
-        is_first_responder = False
+        is_first_responder = True
         # Main conversation loop
         while state.group_queue:
             try:
@@ -167,11 +171,17 @@ def init_group_conversation_state(
 
 def init_group_conversation_contexts(
     client_contexts: Dict[str, ServiceContext],
+    group_members: List[str],
 ) -> None:
     """Initialize group conversation context for each AI participant"""
-    ai_names = [ctx.character_config.character_name for ctx in client_contexts.values()]
+    group_contexts = [
+        client_contexts[member_uid]
+        for member_uid in group_members
+        if member_uid in client_contexts
+    ]
+    ai_names = [ctx.character_config.character_name for ctx in group_contexts]
 
-    for context in client_contexts.values():
+    for context in group_contexts:
         agent = context.agent_engine
         if hasattr(agent, "start_group_conversation"):
             agent.start_group_conversation(

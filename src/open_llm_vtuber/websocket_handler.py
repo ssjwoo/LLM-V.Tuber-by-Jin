@@ -68,7 +68,7 @@ class WebSocketHandler:
         self.chat_group_manager = ChatGroupManager()
         self.current_conversation_tasks: Dict[str, Optional[asyncio.Task]] = {}
         self.default_context_cache = default_context_cache
-        self.received_data_buffers: Dict[str, np.ndarray] = {}
+        self.received_data_buffers: Dict[str, List[np.ndarray]] = {}
 
         # Message handlers mapping
         self._message_handlers = self._init_message_handlers()
@@ -141,7 +141,7 @@ class WebSocketHandler:
         """Store client data and initialize group status"""
         self.client_connections[client_uid] = websocket
         self.client_contexts[client_uid] = session_service_context
-        self.received_data_buffers[client_uid] = np.array([])
+        self.received_data_buffers[client_uid] = []
 
         self.chat_group_manager.client_group_map[client_uid] = ""
         await self.send_group_update(websocket, client_uid)
@@ -279,6 +279,7 @@ class WebSocketHandler:
 
     async def handle_disconnect(self, client_uid: str) -> None:
         """Handle client disconnection"""
+        context = self.client_contexts.get(client_uid)
         group = self.chat_group_manager.get_client_group(client_uid)
         if group:
             await handle_group_interrupt(
@@ -299,7 +300,6 @@ class WebSocketHandler:
 
         # Clean up other client data
         self.client_connections.pop(client_uid, None)
-        self.client_contexts.pop(client_uid, None)
         self.received_data_buffers.pop(client_uid, None)
         if client_uid in self.current_conversation_tasks:
             task = self.current_conversation_tasks[client_uid]
@@ -308,17 +308,18 @@ class WebSocketHandler:
             self.current_conversation_tasks.pop(client_uid, None)
 
         # Call context close to clean up resources (e.g., MCPClient)
-        context = self.client_contexts.get(client_uid)
         if context:
             await context.close()
+
+        self.client_contexts.pop(client_uid, None)
 
         logger.info(f"Client {client_uid} disconnected")
         message_handler.cleanup_client(client_uid)
 
     async def _cleanup_failed_connection(self, client_uid: str) -> None:
         """Clean up failed connection data"""
+        context = self.client_contexts.get(client_uid)
         self.client_connections.pop(client_uid, None)
-        self.client_contexts.pop(client_uid, None)
         self.received_data_buffers.pop(client_uid, None)
         self.chat_group_manager.client_group_map.pop(client_uid, None)
 
@@ -328,6 +329,9 @@ class WebSocketHandler:
                 task.cancel()
             self.current_conversation_tasks.pop(client_uid, None)
 
+        if context:
+            await context.close()
+        self.client_contexts.pop(client_uid, None)
         message_handler.cleanup_client(client_uid)
 
     async def broadcast_to_group(
@@ -481,9 +485,8 @@ class WebSocketHandler:
         """Handle incoming audio data"""
         audio_data = data.get("audio", [])
         if audio_data:
-            self.received_data_buffers[client_uid] = np.append(
-                self.received_data_buffers[client_uid],
-                np.array(audio_data, dtype=np.float32),
+            self.received_data_buffers[client_uid].append(
+                np.array(audio_data, dtype=np.float32)
             )
 
     async def _handle_raw_audio_data(
@@ -502,9 +505,8 @@ class WebSocketHandler:
                     pass
                 elif len(audio_bytes) > 1024:
                     # Detected audio activity (voice)
-                    self.received_data_buffers[client_uid] = np.append(
-                        self.received_data_buffers[client_uid],
-                        np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32),
+                    self.received_data_buffers[client_uid].append(
+                        np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32)
                     )
                     await websocket.send_text(
                         json.dumps({"type": "control", "text": "mic-audio-end"})
