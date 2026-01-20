@@ -1,0 +1,11 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+cache
+logs
+recordings
+backgrounds/my_frieren.png
+frontend/node_modules
+frontend/dist
