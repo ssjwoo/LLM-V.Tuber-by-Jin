@@ -1,0 +1,34 @@
+services:
+  open-llm-vtuber:
+    build: .
+    container_name: open-llm-vtuber
+    ports:
+      - "12393:12393"
+    volumes:
+      # Mount configuration file to allow editing on host
+      - ./conf.yaml:/app/conf.yaml
+      
+      # Persist chat history
+      - ./chat_history:/app/chat_history
+      
+      # Mount prompts and characters for easy customization
+      - ./prompts:/app/prompts
+      - ./characters:/app/characters
+      
+      # Mount Google Cloud Credentials
+      # IMPORTANT: You must upload your application_default_credentials.json to the VM
+      # and ensure the path represents where it is on the VM.
+      # Common pattern: ~/.config/gcloud/application_default_credentials.json
+      - ~/.config/gcloud/application_default_credentials.json:/root/.config/gcloud/application_default_credentials.json:ro
+
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
+      # Force python to not buffer output
+      - PYTHONUNBUFFERED=1
+
+    restart: unless-stopped
+    devices:
+      # Optional: Pass GPU if available on VM
+      # - /dev/dri:/dev/dri
+      # - /dev/nvidia0:/dev/nvidia0 
+      []

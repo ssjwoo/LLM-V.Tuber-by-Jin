@@ -40,6 +40,8 @@ class TTSEngine(TTSInterface):
         file_name = self.generate_cache_file_name(file_name_no_ext, self.file_extension)
 
         try:
+            logger.info(f"DEBUG: edge_tts version: {edge_tts.__version__}")
+            logger.info(f"DEBUG: Generating audio for text: '{text}'")
             communicate = edge_tts.Communicate(text, self.voice)
             communicate.save_sync(file_name)
         except Exception as e:
