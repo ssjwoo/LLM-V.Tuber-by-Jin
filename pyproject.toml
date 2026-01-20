@@ -66,3 +66,11 @@ per-file-ignores = { "scripts/run_bilibili_live.py" = ["E402"] }
 
 [tool.uv.sources]
 edge-tts = { git = "https://github.com/rany2/edge-tts" }
+torch = [
+  { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
