@@ -10,7 +10,7 @@ chardet==5.2.0
     # via open-llm-vtuber (pyproject.toml)
 duckduckgo-mcp-server==0.1.1
     # via open-llm-vtuber (pyproject.toml)
-edge-tts==7.0.0
+edge-tts @ git+https://github.com/rany2/edge-tts@b45c019b9948e069c69c6ecb3a341badc970439c
     # via open-llm-vtuber (pyproject.toml)
 fastapi==0.115.8
     # via open-llm-vtuber (pyproject.toml)
@@ -47,6 +47,8 @@ ruamel-yaml==0.18.10
 ruff==0.9.1
     # via open-llm-vtuber (pyproject.toml)
 scipy==1.15.1
+    # via open-llm-vtuber (pyproject.toml)
+sherpa-onnx==1.12.23
     # via open-llm-vtuber (pyproject.toml)
 soundfile==0.13.0
     # via open-llm-vtuber (pyproject.toml)
