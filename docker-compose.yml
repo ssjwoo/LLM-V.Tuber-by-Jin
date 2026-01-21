@@ -14,6 +14,7 @@ services:
       # Mount prompts and characters for easy customization
       - ./prompts:/app/prompts
       - ./characters:/app/characters
+      - ./frontend:/app/frontend
       
       # Mount Google Cloud Credentials
       # IMPORTANT: You must upload your application_default_credentials.json to the VM
