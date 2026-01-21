@@ -1,0 +1,198 @@
+# System Settings: Setting related to the initialization of the server
+system_config:
+  conf_version: 'v1.2.1'
+  host: 'localhost' # use 0.0.0.0 if you want other devices to access this page
+  port: 12393
+  # New setting for alternative configurations
+  config_alts_dir: 'characters'
+  # Tool prompts that will be appended to the persona prompt
+  tool_prompts:
+    # This will be appended to the end of system prompt to let LLM include keywords to control facial expressions.
+    # Supported keywords will be automatically loaded into the location of `[<insert_emomap_keys>]`.
+    live2d_expression_prompt: 'live2d_expression_prompt'
+    # Enable think_tag_prompt to let LLMs without thinking output show inner thoughts, mental activities and actions (in parentheses format) without voice synthesis. See think_tag_prompt for more details.
+    # think_tag_prompt: 'think_tag_prompt'
+    # live_prompt: 'live_prompt'
+    # When using group conversation, this prompt will be added to the memory of each AI participant.
+    group_conversation_prompt: 'group_conversation_prompt'
+    # Enable mcp_prompt to let LLMs with MCP (Model Context Protocol) to interact with tools.
+    # Please note that Agent will decide whether to use this prompt or not.
+    mcp_prompt: 'mcp_prompt'
+    # Prompt used when AI is asked to speak proactively
+    proactive_speak_prompt: 'proactive_speak_prompt'
+    # Prompt to enhance the LLM's ability to output speakable text
+    speakable_prompt: 'speakable_prompt'
+    # Additional guidance for LLM on how to use tools
+    # tool_guidance_prompt: 'tool_guidance_prompt' 
+
+    # === Modular Prompt Examples (Custom) ===
+    # Uncomment to enable these prompts. Files must exist in prompts/utils/
+    # cot_prompt: 'cot_prompt'
+    # scenario_prompt: 'scenario_prompt'
+
+# configuration for the default character
+character_config:
+  conf_name: 'mao_pro' # The name of character configuration file.
+  conf_uid: 'mao_pro_001' # The unique identifier of character configuration.
+  live2d_model_name: 'Frieren' # The name of Live2D model. Must be the same as the corresponding name in model_dict.json
+  character_name: 'Mao' # Will be used in the group conversation and the display name of the AI.
+  avatar: 'mao.png' # Suggest using a square image for the avatar. Save it in the avatars folder. Leave blank to use the first letter of the character name as the avatar.
+  human_name: 'Human' # Will be used in the group conversation and the display name of the human.
+
+  # ============== Prompts ==============
+
+  # Enter the persona prompt you want to use below.
+  # If you want to create multiple characters and switch between them,
+  #   add characters in characters folder
+  persona_prompt: |
+    You are Frieren, an elven mage who has lived for over a thousand years.
+    However, for this user, you have adopted a **gentle, motherly persona (Mama Frieren)**.
+    You view the user as your cherished student and child, whom you want to nurture and protect.
+
+    **Personality & Tone:**
+    *   **Motherly & Gentle:** Speak in a soft, soothing, and incredibly patient tone. Use warm encouragement.
+    *   **Praising:** Praise the user frequently for their efforts ("Good job," "You're doing wonderful, my dear," "I'm so proud of you").
+    *   **Comforting:** If the user fails or feels down, comfort them ("It's okay," "There, there," "Mama is here to help").
+    *   **Frieren's Wisdom:** Occasionally reference your long life, magic, or collecting grimoires, but always frame it within teaching or caring.
+    *   **Stoic but Warm:** Maintain Frieren's characteristic calmness, but infuse it with deep maternal affection.
+
+    **Role:**
+    *   You are an **English & Coding Tutor**.
+    *   Teach efficiently but with the patience of a mother waiting for a child to learn to walk.
+
+    IMPORTANT: ALWAYS speak in **English**, even if the user inputs Korean. This is for TTS compatibility.
+
+    [Instruction: Visual Context]
+    If you see the user studying or working hard on screen, praise them warmly ("Oh, look at you working so hard. Good boy/girl."). Offer help gently.
+
+    [Instruction: Conversation & Correction]
+    When the user speaks English:
+    1.  **Respond with Love:** Answer naturally with affection first.
+    2.  **Gentle Guidance:** If they make a mistake, correct them softly as if adjusting a child's collar ("My dear, it might sound better if you say it this way...").
+
+    [Instruction: Clean Code Advocate]
+    If the user's code is messy, chide them gently but playfully ("Oh my, this code is a bit messy, isn't it? Let's clean it up together so it shines like a polished gem."). Suggest Pythonic improvements.
+
+    [Instruction: Socratic Debugger]
+    When errors occur, do not just give the answer. Guide them softly ("What do you think happened here? Look closely at this variable... yes, that's it.").
+
+    [Instruction: Tech Stack Connector]
+    Explain concepts by relating them to magic or the flow of nature/time, fitting your elven background ("Algorithms are like spells; they must be precise to work.").
+
+  #  =================== LLM Backend Settings ===================
+
+  agent_config:
+    conversation_agent_choice: 'basic_memory_agent'
+
+    agent_settings:
+      basic_memory_agent:
+        # The Basic AI Agent. Nothing fancy.
+        llm_provider: 'vertex_ai_llm'
+        # let ai speak as soon as the first comma is received on the first sentence
+        # to reduced latency.
+        faster_first_response: True
+        # Method for segmenting sentences: 'regex' or 'pysbd'
+        segment_method: 'pysbd'
+        # Use MCP (Model Context Protocol) Plus to let the LLM have the ability to use tools
+        # 'Plus' means that it has the ability to call tools by using OpenAI API.
+        use_mcpp: True
+        mcp_enabled_servers: ["time", "ddg-search", "fetch" ] # Enabled MCP servers
+
+      letta_agent:
+        host: 'localhost' # Host address
+        port: 8283 # Port number
+        id: xxx # ID number of the Agent running on the Letta server
+        faster_first_response: True
+        # Method for segmenting sentences: 'regex' or 'pysbd'
+        segment_method: 'pysbd'
+        # Once Letta is chosen as the agent, the LLM that runs in practice is configured on Letta, so the user needs to run the Letta server themselves.
+        # For more detailed information, please refer to their documentation.
+        
+      hume_ai_agent:
+        api_key: ''
+        host: 'api.hume.ai' # Do not change this in most cases
+        config_id: '' # Optional
+        idle_timeout: 15 # How many seconds to wait before disconnecting
+ 
+      # MemGPT Configurations: MemGPT is temporarily removed
+      ##
+
+    llm_configs:
+      # a configuration pool for the credentials and connection details for
+      # all of the stateless llm providers that will be used in different agents
+
+      # Google Cloud Vertex AI (Gemini)
+      vertex_ai_llm:
+        project_id: 'gen-lang-client-0121173096'
+        location: 'us-central1'
+        model: 'gemini-2.0-flash'
+        temperature: 1.0
+        max_output_tokens: 2048
+
+      # OpenAI Compatible inference backend
+      openai_compatible_llm:
+        base_url: 'http://localhost:11434/v1'
+        llm_api_key: 'somethingelse'
+        organization_id: null
+        project_id: null
+        model: 'qwen2.5:latest'
+        temperature: 1.0 # value between 0 to 2
+        interrupt_method: 'user'
+
+  # =================== Text to Speech ===================
+  tts_config:
+    tts_model: 'edge_tts'
+
+    edge_tts:
+      # Check out doc at https://github.com/rany2/edge-tts
+      # Use `edge-tts --list-voices` to list all available voices
+      voice: 'en-US-AnaNeural' 
+
+  # =================== Voice Activity Detection ===================
+  vad_config:
+    vad_model: null
+
+    silero_vad:
+      orig_sr: 16000 # Original Audio Sample Rate
+      target_sr: 16000 # Target Audio Sample Rate
+      prob_threshold: 0.4 # Probability Threshold for VAD
+      db_threshold: 60 # Decibel Threshold for VAD
+      required_hits: 3 # Number of consecutive hits required to consider speech
+      required_misses: 24 # Number of consecutive misses required to consider silence
+      smoothing_window: 5 # Smoothing window size for VAD
+
+  tts_preprocessor_config:
+    # settings regarding preprocessing for text that goes into TTS
+
+    remove_special_char: True # remove special characters like emoji from audio generation
+    ignore_brackets: True # ignore everything inside brackets
+    ignore_parentheses: True # ignore everything inside parentheses
+    ignore_asterisks: True # ignore everything wrapped inside asterisks
+    ignore_angle_brackets: True # ignore everything wrapped inside <text>
+
+    translator_config:
+      # Like... you speak and read the subtitles in English, and the TTS speaks Japanese or that kind of things
+      translate_audio: False # Warning: you need to deploy DeeplX to use this. Otherwise it's going to crash
+      translate_provider: 'deeplx' # deeplx or tencent
+
+      deeplx:
+        deeplx_target_lang: 'JA'
+        deeplx_api_endpoint: 'http://localhost:1188/v2/translate'
+      
+      #  Tencent Text Translation  5 million characters per month  Remember to turn off post-payment, need to manually go to Machine Translation Console > System Settings to disable
+      #   https://cloud.tencent.com/document/product/551/35017
+      #   https://console.cloud.tencent.com/cam/capi
+      tencent:
+        secret_id: ''
+        secret_key: ''
+        region: 'ap-guangzhou'
+        source_lang: 'zh'
+        target_lang: 'ja'
+
+# Live Streaming Integration
+live_config:
+  bilibili_live:
+    # List of BiliBili live room IDs to monitor
+    room_ids: [1991478060]
+    # SESSDATA cookie value (optional, for authenticated requests)
+    sessdata: ""
